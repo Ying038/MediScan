@@ -41,7 +41,7 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBcQB6Wtw4YhDqJd0PTOGgKBgmnklytRMM',
+    apiKey: 'YOURAPIKEY',
     appId: '1:985792666610:web:8c6ea0d8de2f679245e96b',
     messagingSenderId: '985792666610',
     projectId: 'mediscan-df3c6',
@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCSNtwsaDzziPmGpejLTKh5NUD4InF90Sc',
+    apiKey: 'YOURAPIKEY',
     appId: '1:985792666610:android:95e4f8f6541f279a45e96b',
     messagingSenderId: '985792666610',
     projectId: 'mediscan-df3c6',
@@ -59,7 +59,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDtAvXvQR0qj3GU1ygWNCIJtlJINhUww54',
+    apiKey: 'YOURAPIKEY',
     appId: '1:985792666610:ios:dce5ad5e37bd885545e96b',
     messagingSenderId: '985792666610',
     projectId: 'mediscan-df3c6',
@@ -68,7 +68,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDtAvXvQR0qj3GU1ygWNCIJtlJINhUww54',
+    apiKey: 'YOURAPIKEY',
     appId: '1:985792666610:ios:dce5ad5e37bd885545e96b',
     messagingSenderId: '985792666610',
     projectId: 'mediscan-df3c6',
@@ -77,7 +77,7 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBcQB6Wtw4YhDqJd0PTOGgKBgmnklytRMM',
+    apiKey: 'YOURAPIKEY',
     appId: '1:985792666610:web:031d9822e331d40745e96b',
     messagingSenderId: '985792666610',
     projectId: 'mediscan-df3c6',
