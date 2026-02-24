@@ -19,7 +19,6 @@ class _MedCalendarPageState extends State<MedCalendarPage> {
   late ConfettiController _confettiController;
   final MedService _service = MedService();
 
-  // Pastel Colors
   final Color primaryPurple = const Color(0xFF8A94FF);
   final Color accentPink = const Color(0xFFFF8EAC);
   final Color bgColor = const Color(0xFFF8F9FE);
@@ -44,7 +43,7 @@ class _MedCalendarPageState extends State<MedCalendarPage> {
         Scaffold(
           backgroundColor: bgColor,
           appBar: AppBar(
-            title: Text("Medication Tracker", style: TextStyle(color: textDark, fontWeight: FontWeight.bold)),
+            title: Text("Daily Schedule", style: TextStyle(color: textDark, fontWeight: FontWeight.bold)),
             backgroundColor: Colors.transparent,
             elevation: 0,
             iconTheme: IconThemeData(color: textDark),
@@ -101,8 +100,21 @@ class _MedCalendarPageState extends State<MedCalendarPage> {
                         builder: (context, snapshot) {
                           if (snapshot.hasData) {
                             final meds = snapshot.data!.docs;
-                            bool dayComplete = meds.isNotEmpty && meds.every((m) => 
-                              _service.isTakenOnDate(m.data()['lastTaken'], day));
+                            
+                            // Check completion only for meds that existed on this day
+                            final medsValidForDay = meds.where((m) {
+                              if (m.data()['createdAt'] == null) return true;
+                              DateTime created = (m.data()['createdAt'] as Timestamp).toDate();
+                              return !day.isBefore(DateTime(created.year, created.month, created.day));
+                            }).toList();
+
+                            bool dayComplete = medsValidForDay.isNotEmpty && 
+                                medsValidForDay.every((m) {
+                                  final data = m.data();
+                                  int req = (data['frequency'] == 'Thrice a day') ? 3 : 
+                                            (data['frequency'] == 'Twice a day') ? 2 : 1;
+                                  return _service.getTakenCountForDate(data['takenDoses'], day) >= req;
+                                });
 
                             if (dayComplete) {
                               return Center(
@@ -144,15 +156,17 @@ class _MedCalendarPageState extends State<MedCalendarPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text("Daily Checklist", style: TextStyle(color: textDark, fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 15),
+              Expanded(
+                child: ListView(
+                  children: [
+                    _sectionHeader("Appointments"),
+                    _buildFilteredAppointmentList(),
+                    _sectionHeader("Medications"),
+                    _buildFilteredMedList(),
+                  ],
                 ),
               ),
-              Expanded(child: _buildList()),
             ],
           ),
         ),
@@ -169,115 +183,302 @@ class _MedCalendarPageState extends State<MedCalendarPage> {
     );
   }
 
-  void _showAddAppointment() {
-    final nameController = TextEditingController();
-    final reasonController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-        title: Text("New Appointment", style: TextStyle(color: textDark, fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text("For: ${DateFormat('d MMMM').format(_selectedDay)}", 
-                style: TextStyle(color: primaryPurple, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 15),
-            TextField(
-              controller: nameController,
-              decoration: _dialogInputDecoration("Doctor's Name"),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: reasonController,
-              decoration: _dialogInputDecoration("Reason"),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel", style: TextStyle(color: Colors.grey))),
-          ElevatedButton(
-            onPressed: () {
-              if (nameController.text.isNotEmpty) {
-                _service.addAppointment(
-                  doctorName: nameController.text,
-                  reason: reasonController.text,
-                  date: _selectedDay,
-                  time: "10:00 AM",
-                );
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Appointment saved!"), backgroundColor: Colors.green));
-              }
-            }, 
-            style: ElevatedButton.styleFrom(backgroundColor: primaryPurple),
-            child: const Text("Save"),
-          ),
-        ],
-      ),
+  Widget _sectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+      child: Text(title, style: TextStyle(color: textDark, fontWeight: FontWeight.bold, fontSize: 16)),
     );
   }
 
-  InputDecoration _dialogInputDecoration(String label) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(color: Colors.grey),
-      enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: primaryPurple)),
-    );
-  }
-
-  Widget _buildList() {
+  Widget _buildFilteredAppointmentList() {
     return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-      stream: _service.getMedicineStream(),
+      stream: _service.getAppointmentStream(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-        final docs = snapshot.data!.docs;
-        
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          itemCount: docs.length,
-          itemBuilder: (context, index) {
-            final data = docs[index].data();
-            final docId = docs[index].id;
-            bool isTakenOnThisDay = _service.isTakenOnDate(data['lastTaken'], _selectedDay);
+        if (!snapshot.hasData) return const SizedBox();
+        final appointments = snapshot.data!.docs.where((doc) => isSameDay(DateTime.parse(doc.data()['date']), _selectedDay)).toList();
 
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
-              ),
-              child: ListTile(
-                leading: IconButton(
-                  icon: Icon(
-                    isTakenOnThisDay ? Icons.check_circle : Icons.circle_outlined,
-                    color: isTakenOnThisDay ? Colors.green : primaryPurple,
-                    size: 30,
-                  ),
-                  onPressed: () {
-                    if (isSameDay(_selectedDay, DateTime.now())) {
-                      if (!isTakenOnThisDay) {
-                        _service.markAsTaken(docId);
-                        _confettiController.play();
-                      }
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("You can only mark meds for today!")));
-                    }
-                  },
-                ),
-                title: Text(data['name'], style: TextStyle(color: textDark, fontWeight: FontWeight.bold)),
-                subtitle: Text("${data['portion']} • ${data['timeToEat']}", style: const TextStyle(color: Colors.grey)),
-                trailing: IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                  onPressed: () => _service.deleteMedicine(docId),
-                ),
+        return ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: appointments.length,
+          itemBuilder: (context, index) {
+            final data = appointments[index].data();
+            final docId = appointments[index].id;
+            return _listItemCard(
+              title: data['doctor'],
+              subtitle: "${data['time']} • ${data['reason']}",
+              icon: Icons.alarm,
+              iconColor: accentPink,
+              onTap: () => _showAddAppointment(existingData: data, docId: docId),
+              trailing: IconButton(
+                icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                onPressed: () => _service.deleteAppointment(docId),
               ),
             );
           },
         );
       },
     );
+  }
+
+  Widget _buildFilteredMedList() {
+  return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+    stream: _service.getMedicineStream(),
+    builder: (context, snapshot) {
+      if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
+      
+      final allDocs = snapshot.data!.docs;
+      
+      final filteredDocs = allDocs.where((doc) {
+        final data = doc.data();
+        if (data['createdAt'] != null) {
+          DateTime created = (data['createdAt'] as Timestamp).toDate();
+          DateTime createdStart = DateTime(created.year, created.month, created.day);
+          DateTime selectedStart = DateTime(_selectedDay.year, _selectedDay.month, _selectedDay.day);
+          if (selectedStart.isBefore(createdStart)) return false;
+        }
+
+        if (data['frequency'] == 'Weekly') {
+          return _selectedDay.weekday == data['weekdayCreated'];
+        }
+        return true;
+      }).toList();
+
+      return Column(
+        children: [
+          _buildIncompleteWarning(filteredDocs),
+          
+          if (filteredDocs.isEmpty)
+            const Center(child: Padding(padding: EdgeInsets.all(20), child: Text("No medicines for this day.", style: TextStyle(color: Colors.grey)))),
+
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: filteredDocs.length,
+            itemBuilder: (context, index) {
+              final data = filteredDocs[index].data();
+              final docId = filteredDocs[index].id;
+              
+              return Theme(
+                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
+                  ),
+                  child: ExpansionTile(
+                    leading: Icon(Icons.medication_outlined, color: primaryPurple, size: 30),
+                    title: Text(data['name'], style: TextStyle(color: textDark, fontWeight: FontWeight.bold)),
+                    subtitle: Text("${data['portion']} • ${data['frequency']}"),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined, color: Colors.grey, size: 20),
+                          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (c) => MedFormPage(initialData: {...data, 'docId': docId}))),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                          onPressed: () => _service.deleteMedicine(docId),
+                        ),
+                      ],
+                    ),
+                    children: [
+                      const Divider(height: 1),
+                      Builder(builder: (context) {
+                        final List<dynamic> scheduledTimes = data['times'] ?? [];
+                        final List<dynamic> takenDoses = data['takenDoses'] ?? [];
+                        int takenTodayCount = _service.getTakenCountForDate(takenDoses, _selectedDay);
+
+                        return Column(
+                          children: List.generate(scheduledTimes.length, (idx) {
+                            String timeStr = scheduledTimes[idx];
+                            bool doseAlreadyTaken = idx < takenTodayCount;
+                            
+                            // --- TIME VALIDATION LOGIC (+- 1hr) ---
+                            bool isWithinTimeRange = true; 
+                            String statusText = "Scheduled at $timeStr";
+
+                            if (isSameDay(_selectedDay, DateTime.now())) {
+                              DateTime now = DateTime.now();
+                              // Parse the saved time string (e.g. "8:00 AM")
+                              DateTime scheduled;
+                              try {
+                                // .trim() removes any accidental leading/trailing spaces
+                                scheduled = DateFormat.jm().parse(timeStr.trim());
+                              } catch (e) {
+                                // Fallback if the format is slightly different
+                                scheduled = DateFormat("h:mm a").parse(timeStr.trim());
+                              }
+                              DateTime doseTimeToday = DateTime(now.year, now.month, now.day, scheduled.hour, scheduled.minute);
+                              int scheduledMinutes = scheduled.hour * 60 + scheduled.minute;
+                              int currentMinutes = now.hour * 60 + now.minute;
+                              int diffInMinutes = (currentMinutes - scheduledMinutes).abs();
+                              isWithinTimeRange = diffInMinutes <= 60; 
+                              if (!isWithinTimeRange && currentMinutes < scheduledMinutes) {
+                                statusText = "Too early. Available at $timeStr";
+                              } else if (!isWithinTimeRange && currentMinutes > scheduledMinutes) {
+                                statusText = "Missed time. Was due at $timeStr";
+                              }
+                            }
+
+                            return ListTile(
+                              dense: true,
+                              leading: Icon(
+                                doseAlreadyTaken ? Icons.check_circle : Icons.circle_outlined,
+                                color: doseAlreadyTaken 
+                                    ? Colors.green 
+                                    : (isWithinTimeRange ? primaryPurple : Colors.grey.withOpacity(0.5)),
+                              ),
+                              title: Text("Dose ${idx + 1} • $timeStr"),
+                              subtitle: Text(doseAlreadyTaken ? "Taken successfully" : statusText, 
+                                  style: TextStyle(color: isWithinTimeRange || doseAlreadyTaken ? Colors.grey : Colors.orange)),
+                              trailing: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: doseAlreadyTaken ? Colors.green : primaryPurple,
+                                  disabledBackgroundColor: Colors.grey.shade300,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  elevation: 0,
+                                ),
+                                onPressed: (isWithinTimeRange && !doseAlreadyTaken && isSameDay(_selectedDay, DateTime.now()))
+                                    ? () {
+                                        _service.markAsTaken(docId);
+                                        _confettiController.play();
+                                      }
+                                    : null, 
+                                child: Text(doseAlreadyTaken ? "Done" : "Tick", style: const TextStyle(color: Colors.white)),
+                              ),
+                            );
+                          }),
+                        );
+                      }),
+                      const SizedBox(height: 10),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      );
+    },
+  );
+}
+
+  Widget _buildIncompleteWarning(List<QueryDocumentSnapshot<Map<String, dynamic>>> docs) {
+    DateTime today = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
+    if (!_selectedDay.isBefore(today)) return const SizedBox();
+
+    bool incomplete = docs.any((m) {
+      final data = m.data();
+      int req = (data['frequency'] == 'Thrice a day') ? 3 : (data['frequency'] == 'Twice a day') ? 2 : 1;
+      return _service.getTakenCountForDate(data['takenDoses'], _selectedDay) < req;
+    });
+
+    if (!incomplete) return const SizedBox();
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: Colors.orange.withOpacity(0.1), borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.orange.withOpacity(0.3))),
+      child: const Row(
+        children: [
+          Icon(Icons.warning_amber_rounded, color: Colors.orange),
+          SizedBox(width: 10),
+          Expanded(child: Text("Warning: You missed doses on this day!", style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontSize: 13))),
+        ],
+      ),
+    );
+  }
+
+  Widget _listItemCard({required String title, required String subtitle, required IconData icon, required Color iconColor, VoidCallback? onTap, Widget? trailing}) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))]),
+      child: ListTile(onTap: onTap, leading: Icon(icon, color: iconColor, size: 30), title: Text(title, style: TextStyle(color: textDark, fontWeight: FontWeight.bold)), subtitle: Text(subtitle, style: const TextStyle(color: Colors.grey)), trailing: trailing),
+    );
+  }
+
+  void _showAddAppointment({Map<String, dynamic>? existingData, String? docId}) {
+    final nameController = TextEditingController(text: existingData?['doctor']);
+    final reasonController = TextEditingController(text: existingData?['reason']);
+    bool isEditing = existingData != null;
+    
+    // Default time is 10:00 AM or the existing time if editing
+    TimeOfDay selectedTime = const TimeOfDay(hour: 10, minute: 0);
+    if (isEditing && existingData?['time'] != null) {
+      // Basic parsing logic if you store time as "10:00 AM"
+      final timeParts = existingData!['time'].split(':');
+      selectedTime = TimeOfDay(hour: int.parse(timeParts[0]), minute: 0); 
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder( // Added StatefulBuilder here
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: Text(isEditing ? "Edit Appointment" : "New Appointment"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min, 
+              children: [
+                TextField(controller: nameController, decoration: _dialogInputDecoration("Doctor Name")),
+                const SizedBox(height: 10),
+                TextField(controller: reasonController, decoration: _dialogInputDecoration("Reason")),
+                const SizedBox(height: 15),
+                
+                // --- TIME PICKER TRIGGER ---
+                ListTile(
+                  title: const Text("Select Time", style: TextStyle(fontSize: 14)),
+                  subtitle: Text(selectedTime.format(context), 
+                    style: TextStyle(color: primaryPurple, fontWeight: FontWeight.bold, fontSize: 18)),
+                  trailing: Icon(Icons.access_time, color: primaryPurple),
+                  onTap: () async {
+                    TimeOfDay? picked = await showTimePicker(
+                      context: context,
+                      initialTime: selectedTime,
+                    );
+                    if (picked != null) {
+                      setDialogState(() => selectedTime = picked); // Update dialog UI
+                    }
+                  },
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: primaryPurple),
+                onPressed: () {
+                  if (isEditing) {
+                    _service.updateAppointment(
+                      docId: docId!, 
+                      doctorName: nameController.text, 
+                      reason: reasonController.text, 
+                      date: _selectedDay, 
+                      time: selectedTime.format(context) // Save the picked time
+                    );
+                  } else {
+                    _service.addAppointment(
+                      doctorName: nameController.text, 
+                      reason: reasonController.text, 
+                      date: _selectedDay, 
+                      time: selectedTime.format(context) // Save the picked time
+                    );
+                  }
+                  Navigator.pop(context);
+                },
+                child: Text(isEditing ? "Update" : "Save", style: const TextStyle(color: Colors.white)),
+              ),
+            ],
+          );
+        }
+      ),
+    );
+  }
+
+  InputDecoration _dialogInputDecoration(String label) {
+    return InputDecoration(labelText: label, labelStyle: const TextStyle(color: Colors.grey), enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: primaryPurple)), focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: primaryPurple, width: 2)));
   }
 }

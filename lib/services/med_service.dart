@@ -34,7 +34,27 @@ class MedService {
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
+  Future<void> updateAppointment({
+    required String docId,
+    required String doctorName,
+    required String reason,
+    required DateTime date,
+    required String time,
+  }) async {
+    if (userId == null) return;
+    await _db.collection('users').doc(userId).collection('appointments').doc(docId).update({
+      'doctor': doctorName,
+      'reason': reason,
+      'date': date.toIso8601String(),
+      'time': time,
+    });
+  }
 
+  // 3. Delete Appointment
+  Future<void> deleteAppointment(String docId) async {
+    if (userId == null) return;
+    await _db.collection('users').doc(userId).collection('appointments').doc(docId).delete();
+  }
   // 2. Stream for Appointments
   Stream<QuerySnapshot<Map<String, dynamic>>> getAppointmentStream() {
     if (userId == null) return const Stream.empty();
@@ -46,47 +66,69 @@ class MedService {
         .snapshots();
   }
   // 2. Comprehensive Add: Used for both Manual and Scanner entries
+  // lib/services/med_service.dart
+
+  // 1. Update addMedicine
   Future<void> addMedicine({
     required String name,
     required String portion,
     required String frequency,
-    required String timeToEat,
+    required List<String> times, // Change 'String timeToEat' to 'List<String> times'
   }) async {
     if (userId == null) return;
-    
+    int weekdayCreated = DateTime.now().weekday;
+
     await _db.collection('users').doc(userId).collection('medicines').add({
       'name': name,
       'portion': portion,
       'frequency': frequency,
-      'timeToEat': timeToEat,
+      'times': times, // Store the list in Firestore
+      'weekdayCreated': weekdayCreated,
       'createdAt': FieldValue.serverTimestamp(),
-      'lastTaken': null, 
+      'takenDoses': [],
+    });
+  }
+
+  // 2. Update updateMedicine
+  Future<void> updateMedicine({
+    required String docId,
+    required String name,
+    required String portion,
+    required String frequency,
+    required List<String> times, // Change this to List<String>
+  }) async {
+    if (userId == null) return;
+    await _db.collection('users').doc(userId).collection('medicines').doc(docId).update({
+      'name': name,
+      'portion': portion,
+      'frequency': frequency,
+      'times': times, // Update the list in Firestore
     });
   }
 
   // 3. Mark as "Taken Today": Updates the lastTaken timestamp
   Future<void> markAsTaken(String docId) async {
     if (userId == null) return;
-
-    await _db
-        .collection('users')
-        .doc(userId)
-        .collection('medicines')
-        .doc(docId)
-        .update({
-      'lastTaken': DateTime.now().toIso8601String(),
+    final now = DateTime.now().toIso8601String();
+    
+    await _db.collection('users').doc(userId).collection('medicines').doc(docId).update({
+      // arrayUnion adds a new timestamp without deleting the old ones
+      'takenDoses': FieldValue.arrayUnion([now]), 
+      'lastTaken': now, // Keep this for compatibility with other logic
     });
   }
-
-  // 4. Update/Edit existing entry
-  Future<void> updateMedicine(String docId, Map<String, dynamic> updatedData) async {
-    if (userId == null) return;
-    await _db
-        .collection('users')
-        .doc(userId)
-        .collection('medicines')
-        .doc(docId)
-        .update(updatedData);
+  bool isSameDay(DateTime date1, DateTime date2) {
+    return date1.year == date2.year &&
+          date1.month == date2.month &&
+          date1.day == date2.day;
+  }
+  // Logic to count how many doses were taken on a specific day
+  int getTakenCountForDate(List<dynamic>? takenDoses, DateTime date) {
+    if (takenDoses == null) return 0;
+    return takenDoses.where((d) {
+      DateTime doseDate = DateTime.parse(d);
+      return isSameDay(doseDate, date);
+    }).length;
   }
 
   // 5. Delete Entry
