@@ -5,13 +5,13 @@
 ![Flutter](https://img.shields.io/badge/Flutter-3.x-blue?logo=flutter)
 ![Firebase](https://img.shields.io/badge/Firebase-Auth%20%7C%20Firestore-orange?logo=firebase)
 ![Google AI](https://img.shields.io/badge/Google-Gemini%20API-red?logo=google)
-![SDG 3](https://img.shields.io/badge/SDG-3%20Good%20Health-green)
-![SDG 10 - Reduced Inequalities](https://img.shields.io/badge/SDG-10-E5243B.svg?style=flat&label=Goal%2010&logo=united-nations&logoColor=white)
+![SDG 3](https://img.shields.io/badge/SDG-3%20Good%20Health%20and%20Well-Being-green)
+![SDG 10](https://img.shields.io/badge/SDG-10%20Reduced%20Inequalities-pink)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
----
 
-# 📌 Project Overview
+
+## 📌 Project Overview
 
 MediScan is an AI-powered medication safety assistant built specifically for elderly users.
 
@@ -19,9 +19,9 @@ It transforms complex prescription labels into structured, easy-to-follow medica
 
 MediScan reduces medication errors, prevents double-dosing, and enables independent living through intelligent automation.
 
----
 
-# ⚠️ Problem Statement
+
+## ⚠️ Problem Statement
 
 Elderly patients frequently manage multiple prescriptions simultaneously (polypharmacy), leading to:
 
@@ -35,9 +35,9 @@ Studies show that up to **75–96% of seniors admit to medication mistakes at ho
 
 These are systemic complexity failures — not user negligence.
 
----
 
-# 🎯 Our Solution
+
+## 🎯 Our Solution
 
 MediScan removes the interpretation and memory burden from the patient.
 
@@ -50,11 +50,11 @@ Instead of reading, typing, and remembering:
 
 This converts medication management from manual and risky to structured and assisted.
 
----
 
-# 🌍 SDG & AI Alignment
 
-## 🎯 SDG 3 – Good Health & Well-being
+## 🌍 SDG & AI Alignment
+
+### 🎯 SDG 3 – Good Health & Well-being
 
 MediScan reduces:
 
@@ -64,13 +64,13 @@ MediScan reduces:
 
 By improving adherence and safety, MediScan directly strengthens preventive healthcare systems.
 
-## 🎯 SDG 10 - Reduced Inequalities 
+### 🎯 SDG 10 - Reduced Inequalities 
 
 By providing a senior-optimized digital tool, we ensure that technological advancements in healthcare are inclusive and accessible to the elderly, not just the tech-savvy youth.
 
----
 
-## 🤖 AI Integration
+
+### 🤖 AI Integration
 
 We use **Google Gemini API** to convert unstructured prescription label text into structured medication schedules.
 
@@ -83,11 +83,11 @@ This enables:
 
 AI is not decorative — it is the core engine of accessibility.
 
----
 
-# ✨ Key Features
 
-## 📸 AI Prescription Scanning
+## ✨ Key Features
+
+### 📸 AI Prescription Scanning
 
 * Capture medicine label image
 * Gemini extracts:
@@ -97,9 +97,8 @@ AI is not decorative — it is the core engine of accessibility.
   * Frequency
   * Special instructions
 
----
 
-## 🎨 Elderly-Optimized UI
+### 🎨 Elderly-Optimized UI
 
 * High-contrast design
 * Large touch targets
@@ -109,9 +108,8 @@ AI is not decorative — it is the core engine of accessibility.
   * 🟢 Green → Completed
   * 🌸 Pink → Pending
 
----
 
-## ⏱️ ±1 Hour Safety Window Logic
+### ⏱️ ±1 Hour Safety Window Logic
 
 Medication logging is only enabled within one hour of the scheduled time.
 
@@ -121,9 +119,8 @@ Prevents:
 * Early accidental dosing
 * Retroactive unsafe edits
 
----
 
-## 🔢 Dynamic Multi-Dose Tracking
+### 🔢 Dynamic Multi-Dose Tracking
 
 Automatically generates individual buttons for:
 
@@ -131,20 +128,55 @@ Automatically generates individual buttons for:
 * Twice daily
 * Thrice daily medications
 
----
 
-## 📅 Smart Dashboard Filtering
+### 📅 Smart Dashboard Filtering
 
 Only future appointments are shown.
 Past records are archived automatically.
 
 Reduces cognitive clutter.
 
----
 
-# 🏗️ System Architecture
+## ⚙️ Setup Instructions
 
-## 🔁 High-Level Flow
+### 🔹 Prerequisites
+
+* Flutter 3.x
+* Dart SDK
+* Firebase project (Auth + Firestore enabled)
+* Gemini API key from Google AI Studio
+
+
+### 🔹 .env Configuration
+
+Create a `.env` file in the root directory:
+
+```
+FIREBASE_API_KEY=your_firebase_api_key
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+
+### 🔹 Firebase Setup
+
+Enable:
+
+* Authentication (Email/Password)
+* Firestore Database
+
+
+### 🔹 Installation
+
+```bash
+git clone https://github.com/Ying038/MediScan.git
+cd mediscan
+flutter pub get
+flutter run
+```
+
+## 🏗️ System Architecture
+
+### 🔁 High-Level Flow
 
 ```
 User → Capture Prescription Image
@@ -162,11 +194,9 @@ Real-Time Dashboard Rendering
 Time-Window Logging System
 ```
 
----
+## 🛠 Technical Implementation
 
-# 🛠 Technical Implementation
-
-## 🔷 Tech Stack
+### 🔷 Tech Stack
 
 | Layer            | Technology                    |
 | ---------------- | ----------------------------- |
@@ -175,11 +205,10 @@ Time-Window Logging System
 | Authentication   | Firebase Auth                 |
 | Database         | Firebase Firestore            |
 
----
 
-# 🔬 Google Technology Utilization (Cause → Effect)
+## 🔬 Google Technology Utilization (Cause → Effect)
 
-## 1️⃣ Google Gemini API
+### 1️⃣ Google Gemini API
 
 **Cause:**
 Prescription labels are unstructured and vary widely in format.
@@ -195,9 +224,8 @@ This enables:
 
 Without Gemini, users would need manual data entry — defeating the purpose of elderly accessibility.
 
----
 
-## 2️⃣ Firebase Authentication
+### 2️⃣ Firebase Authentication
 
 **Cause:**
 Medical data requires identity-linked, secure access.
@@ -206,9 +234,8 @@ Medical data requires identity-linked, secure access.
 Firebase Auth provides secure sign-in with minimal friction.
 It ensures medication records are protected and user-specific.
 
----
 
-## 3️⃣ Firebase Firestore
+### 3️⃣ Firebase Firestore
 
 **Cause:**
 Medication logs must update instantly and persist safely.
@@ -227,9 +254,8 @@ This ensures:
 * Instant UI updates
 * Caregiver visibility potential
 
----
 
-# 💡 Innovation Highlights
+## 💡 Innovation Highlights
 
 * AI-driven zero-input onboarding
 * Safety window logic (prevents overdosing by design)
@@ -237,97 +263,50 @@ This ensures:
 * Elderly-first UX philosophy
 * Minimalistic tech stack for scalability
 
----
 
-# ⚔️ Challenges
+## ⚔️ Challenges
 
-## 1️⃣ Parsing Ambiguous Instructions
+### 1️⃣ Parsing Ambiguous Instructions
 
 Prescription formats vary dramatically.
 
 **Solution:**
 We implemented structured output prompting with Gemini to enforce consistent JSON responses.
 
----
 
-## 2️⃣ Preventing Double Logging
+### 2️⃣ Preventing Double Logging
 
 Users could attempt multiple confirmations.
 
 **Solution:**
 Timestamp validation + one-hour activation window logic.
 
----
 
-## 3️⃣ UI Accessibility Testing
+### 3️⃣ UI Accessibility Testing
 
 Standard mobile UI patterns are unsuitable for elderly users.
 
 **Solution:**
 Iterative font scaling, contrast optimization, simplified navigation depth.
 
----
 
-# ⚙️ Setup Instructions
+## 📈 Future Improvements
 
-## 🔹 Prerequisites
-
-* Flutter 3.x
-* Dart SDK
-* Firebase project (Auth + Firestore enabled)
-* Gemini API key from Google AI Studio
-
----
-
-## 🔹 .env Configuration
-
-Create a `.env` file in the root directory:
-
-```
-FIREBASE_API_KEY=your_firebase_api_key
-GEMINI_API_KEY=your_gemini_api_key
-```
-
-
-## 🔹 Firebase Setup
-
-Enable:
-
-* Authentication (Email/Password)
-* Firestore Database
-
----
-
-## 🔹 Installation
-
-```bash
-git clone https://github.com/Ying038/MediScan.git
-cd mediscan
-flutter pub get
-flutter run
-```
-
----
-
-# 📈 Future Improvements
-
-## 🧠 AI Enhancements
+### 🧠 AI Enhancements
 
 * Medication interaction detection
 * Side-effect risk analysis
 * Predictive adherence scoring
 
----
 
-## 👨‍⚕️ Caregiver Ecosystem
+### 👨‍⚕️ Caregiver Ecosystem
 
 * Caregiver dashboard access
 * Remote monitoring
 * SMS emergency alerts
 
----
 
-## 🎙 Accessibility Expansion
+### 🎙 Accessibility Expansion
 
 * Voice-command medication logging
 * Multilingual prescription recognition
@@ -335,4 +314,4 @@ flutter run
 
 ---
 
-# 👥 Team CAPYbara © KitaHack 2026
+### 👥 Team CAPYbara © KitaHack 2026
