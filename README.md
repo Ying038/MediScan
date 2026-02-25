@@ -5,7 +5,7 @@
 ![Flutter](https://img.shields.io/badge/Flutter-3.x-blue?logo=flutter)
 ![Firebase](https://img.shields.io/badge/Firebase-Auth%20%7C%20Firestore-orange?logo=firebase)
 ![Google AI](https://img.shields.io/badge/Google-Gemini%20API-red?logo=google)
-![SDG 3](https://img.shields.io/badge/SDG-3%20Good%20Health%20and%20Well-Being-green)
+![SDG 3](https://img.shields.io/badge/SDG-3%20Good%20Health%20and%20Well%20Being-green)
 ![SDG 10](https://img.shields.io/badge/SDG-10%20Reduced%20Inequalities-pink)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
