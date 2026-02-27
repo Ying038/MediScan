@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/med_service.dart';
+import 'package:intl/intl.dart';
 
 class MedFormPage extends StatefulWidget {
   final Map<String, dynamic>? initialData;
@@ -158,8 +159,12 @@ class _MedFormPageState extends State<MedFormPage> {
           // 4. Submit Button
           ElevatedButton(
             onPressed: () async {
-              // Convert List<TimeOfDay> to List<String> for Firebase
-              List<String> formattedTimes = _selectedTimes.map((t) => t.format(context)).toList();
+              // FIX: Instead of t.format(context), use a custom formatter to force 12hr AM/PM
+              List<String> formattedTimes = _selectedTimes.map((t) {
+                final now = DateTime.now();
+                final dt = DateTime(now.year, now.month, now.day, t.hour, t.minute);
+                return DateFormat("h:mm a").format(dt); // This forces "8:30 PM" even on 24hr phones
+              }).toList();
 
               if (widget.initialData?['docId'] != null) {
                 await _service.updateMedicine(
@@ -167,14 +172,14 @@ class _MedFormPageState extends State<MedFormPage> {
                   name: _nameController.text,
                   portion: _portionController.text,
                   frequency: _frequency,
-                  times: formattedTimes, // Updated to pass list
+                  times: formattedTimes, 
                 );
               } else {
                 await _service.addMedicine(
                   name: _nameController.text,
                   portion: _portionController.text,
                   frequency: _frequency,
-                  times: formattedTimes, // Updated to pass list
+                  times: formattedTimes, 
                 );
               }
               Navigator.pop(context);

@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/med_service.dart';
 import 'med_form_page.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 class MedCalendarPage extends StatefulWidget {
   const MedCalendarPage({super.key});
@@ -94,42 +95,11 @@ class _MedCalendarPageState extends State<MedCalendarPage> {
                     weekendTextStyle: TextStyle(color: accentPink),
                   ),
                   calendarBuilders: CalendarBuilders(
-                    defaultBuilder: (context, day, focusedDay) {
-                      return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                        stream: _service.getMedicineStream(),
-                        builder: (context, snapshot) {
-                          if (snapshot.hasData) {
-                            final meds = snapshot.data!.docs;
-                            
-                            // Check completion only for meds that existed on this day
-                            final medsValidForDay = meds.where((m) {
-                              if (m.data()['createdAt'] == null) return true;
-                              DateTime created = (m.data()['createdAt'] as Timestamp).toDate();
-                              return !day.isBefore(DateTime(created.year, created.month, created.day));
-                            }).toList();
-
-                            bool dayComplete = medsValidForDay.isNotEmpty && 
-                                medsValidForDay.every((m) {
-                                  final data = m.data();
-                                  int req = (data['frequency'] == 'Thrice a day') ? 3 : 
-                                            (data['frequency'] == 'Twice a day') ? 2 : 1;
-                                  return _service.getTakenCountForDate(data['takenDoses'], day) >= req;
-                                });
-
-                            if (dayComplete) {
-                              return Center(
-                                child: Container(
-                                  width: 35, height: 35,
-                                  decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
-                                  child: const Icon(Icons.check, color: Colors.white, size: 20),
-                                ),
-                              );
-                            }
-                          }
-                          return Center(child: Text('${day.day}', style: TextStyle(color: textDark)));
-                        },
-                      );
-                    },
+                    // We use the same helper for all day types to ensure consistency
+                    defaultBuilder: (context, day, focusedDay) => _buildCalendarDay(day),
+                    todayBuilder: (context, day, focusedDay) => _buildCalendarDay(day, isToday: true),
+                    selectedBuilder: (context, day, focusedDay) => _buildCalendarDay(day, isSelected: true),
+                    
                     markerBuilder: (context, day, events) {
                       return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                         stream: _service.getAppointmentStream(),
@@ -180,6 +150,76 @@ class _MedCalendarPageState extends State<MedCalendarPage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildCalendarDay(DateTime day, {bool isToday = false, bool isSelected = false}) {
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: _service.getMedicineStream(),
+      builder: (context, snapshot) {
+        bool dayComplete = false;
+
+        if (snapshot.hasData) {
+          final meds = snapshot.data!.docs;
+
+          final medsValidForDay = meds.where((m) {
+            final data = m.data();
+            
+            // 1. Check if it was created yet
+            if (data['createdAt'] != null) {
+              DateTime created = (data['createdAt'] as Timestamp).toDate();
+              DateTime createdDateOnly = DateTime(created.year, created.month, created.day);
+              DateTime dayDateOnly = DateTime(day.year, day.month, day.day);
+              if (dayDateOnly.isBefore(createdDateOnly)) return false;
+            }
+
+            // 2. Weekly frequency check (Missing in your original code)
+            if (data['frequency'] == 'Weekly') {
+              return day.weekday == data['weekdayCreated'];
+            }
+            
+            return true;
+          }).toList();
+
+          // Check if all valid meds for THIS specific day are done
+          dayComplete = medsValidForDay.isNotEmpty && 
+              medsValidForDay.every((m) {
+                final data = m.data();
+                int req = (data['frequency'] == 'Thrice a day') ? 3 : 
+                          (data['frequency'] == 'Twice a day') ? 2 : 1;
+                return _service.getTakenCountForDate(data['takenDoses'] ?? [], day) >= req;
+              });
+        }
+
+        if (dayComplete) {
+          return Center(
+            child: Container(
+              width: 35, height: 35,
+              decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+              child: const Icon(Icons.check, color: Colors.white, size: 20),
+            ),
+          );
+        }
+
+        return Center(
+          child: Container(
+            width: 35, height: 35,
+            decoration: BoxDecoration(
+              color: isSelected ? primaryPurple : (isToday ? primaryPurple.withOpacity(0.3) : Colors.transparent),
+              shape: BoxShape.circle,
+            ),
+            child: Center(
+              child: Text(
+                '${day.day}',
+                style: TextStyle(
+                  color: isSelected ? Colors.white : textDark,
+                  fontWeight: isSelected || isToday ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -343,11 +383,21 @@ class _MedCalendarPageState extends State<MedCalendarPage> {
                                   elevation: 0,
                                 ),
                                 onPressed: (isWithinTimeRange && !doseAlreadyTaken && isSameDay(_selectedDay, DateTime.now()))
-                                    ? () {
-                                        _service.markAsTaken(docId);
-                                        _confettiController.play();
-                                      }
-                                    : null, 
+                                  ? () async {
+                                      _service.markAsTaken(docId);
+                                      _confettiController.play();
+                                      
+                                      // --- ANALYTICS TRACKING ---
+                                      await FirebaseAnalytics.instance.logEvent(
+                                        name: 'medication_taken',
+                                        parameters: {
+                                          'medicine_name': data['name'],
+                                          'dose_time': timeStr,
+                                          'day_of_week': DateFormat('EEEE').format(DateTime.now()),
+                                        },
+                                      );
+                                    }
+                                  : null,
                                 child: Text(doseAlreadyTaken ? "Done" : "Tick", style: const TextStyle(color: Colors.white)),
                               ),
                             );
@@ -378,7 +428,13 @@ class _MedCalendarPageState extends State<MedCalendarPage> {
     });
 
     if (!incomplete) return const SizedBox();
-
+    if (incomplete) {
+      // Log that a day was missed when the user views it
+      FirebaseAnalytics.instance.logEvent(
+        name: 'missed_dose_warning_viewed',
+        parameters: {'date': _selectedDay.toIso8601String()},
+      );
+    }
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       padding: const EdgeInsets.all(12),
@@ -451,6 +507,10 @@ class _MedCalendarPageState extends State<MedCalendarPage> {
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: primaryPurple),
                 onPressed: () {
+                  FirebaseAnalytics.instance.logEvent(
+                    name: 'appointment_added',
+                    parameters: {'doctor': nameController.text},
+                  );
                   if (isEditing) {
                     _service.updateAppointment(
                       docId: docId!, 

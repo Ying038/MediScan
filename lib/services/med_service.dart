@@ -7,7 +7,7 @@ class MedService {
   // Getter for the current user's ID to ensure we always have the latest auth state
   String? get userId => FirebaseAuth.instance.currentUser?.uid;
 
-  // 1. Unified Stream: Listens to all medicines for the logged-in user
+
   Stream<QuerySnapshot<Map<String, dynamic>>> getMedicineStream() {
     if (userId == null) return const Stream.empty();
     
@@ -66,7 +66,7 @@ class MedService {
         .snapshots();
   }
   // 2. Comprehensive Add: Used for both Manual and Scanner entries
-  // lib/services/med_service.dart
+
 
   // 1. Update addMedicine
   Future<void> addMedicine({
@@ -95,14 +95,14 @@ class MedService {
     required String name,
     required String portion,
     required String frequency,
-    required List<String> times, // Change this to List<String>
+    required List<String> times, 
   }) async {
     if (userId == null) return;
     await _db.collection('users').doc(userId).collection('medicines').doc(docId).update({
       'name': name,
       'portion': portion,
       'frequency': frequency,
-      'times': times, // Update the list in Firestore
+      'times': times, 
     });
   }
 
@@ -112,9 +112,8 @@ class MedService {
     final now = DateTime.now().toIso8601String();
     
     await _db.collection('users').doc(userId).collection('medicines').doc(docId).update({
-      // arrayUnion adds a new timestamp without deleting the old ones
       'takenDoses': FieldValue.arrayUnion([now]), 
-      'lastTaken': now, // Keep this for compatibility with other logic
+      'lastTaken': now, 
     });
   }
   bool isSameDay(DateTime date1, DateTime date2) {

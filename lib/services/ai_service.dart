@@ -13,7 +13,7 @@ class AIService {
       "You MUST respond in this EXACT format for the app to work: "
       "Medicine Name | Portion | Frequency | Brief Instructions "
       "Example: Panadol | 2 Tablets | Twice a day | Take after meals for pain. "
-      "Do not use greetings, do not say 'Hello', do not use bold or bullet points. "
+      "Do not use greetings, do not say 'Hello', do not use bold or bullet points. Say Twice a day, not 2 times a day. "
       "Just the single line of data. Inclue the purpose of the medicine. Speak slowly and clearly."
       "Use simple, loud-and-clear language. End with: 'Please confirm with your doctor.'"
     ),

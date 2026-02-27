@@ -2,14 +2,6 @@
 
 ### AI-Driven Elderly Medication Safety Assistant
 
-![Flutter](https://img.shields.io/badge/Flutter-3.x-blue?logo=flutter)
-![Firebase](https://img.shields.io/badge/Firebase-Auth%20%7C%20Firestore-orange?logo=firebase)
-![Google AI](https://img.shields.io/badge/Google-Gemini%20API-red?logo=google)
-![SDG 3](https://img.shields.io/badge/SDG-3%20Good%20Health%20and%20Well%20Being-green)
-![SDG 10](https://img.shields.io/badge/SDG-10%20Reduced%20Inequalities-pink)
-![License](https://img.shields.io/badge/License-MIT-lightgrey)
-
-
 
 ## 📌 Project Overview
 
@@ -23,13 +15,25 @@ MediScan reduces medication errors, prevents double-dosing, and enables independ
 
 ## ⚠️ Problem Statement
 
-Elderly patients frequently manage multiple prescriptions simultaneously (polypharmacy), leading to:
+MediScan addresses three major challenges faced by seniors:
 
-* Memory-based dosing errors
-* Accidental double-dosing
-* Missed medication
-* Confusion due to small-print labels
-* Lack of post-clinic guidance
+### 1️⃣ Polypharmacy
+
+* Seniors take an average of **5+ medications daily**
+* Increased risk of missed doses or double dosing
+* Higher chance of adverse drug interactions
+
+### 2️⃣ Vision Barriers
+
+* Tiny font on medication labels
+* Difficulty reading or manually logging prescriptions
+* Poor contrast in traditional applications
+
+### 3️⃣ Memory Gaps
+
+* Anxiety about whether medication was taken
+* Risk of accidental overdose
+* Missed life-critical medications (e.g., heart, diabetes, blood pressure)
 
 Studies show that up to **75–96% of seniors admit to medication mistakes at home**.
 
@@ -54,20 +58,17 @@ This converts medication management from manual and risky to structured and assi
 
 ## 🌍 SDG & AI Alignment
 
-### 🎯 SDG 3 – Good Health & Well-being
+### 🏥 SDG 3 – Good Health & Well-being
 
-MediScan reduces:
+* Reduces hospital readmissions
+* Prevents medication errors
+* Improves long-term adherence
 
-* Hospital readmissions due to medication errors
-* Accidental overdoses
-* Non-adherence risks
+### ⚖ SDG 10 – Reduced Inequalities
 
-By improving adherence and safety, MediScan directly strengthens preventive healthcare systems.
-
-### 🎯 SDG 10 - Reduced Inequalities 
-
-By providing a senior-optimized digital tool, we ensure that technological advancements in healthcare are inclusive and accessible to the elderly, not just the tech-savvy youth.
-
+* Makes healthcare technology senior-friendly
+* Bridges digital literacy gap
+* Promotes inclusive innovation
 
 
 ### 🤖 AI Integration
@@ -84,67 +85,88 @@ This enables:
 AI is not decorative — it is the core engine of accessibility.
 
 
-
 ## ✨ Key Features
 
-### 📸 AI Prescription Scanning
+### 📸 AI Label Scanning
 
-* Capture medicine label image
-* Gemini extracts:
-
-  * Medication name
-  * Dosage
-  * Frequency
-  * Special instructions
+* Extracts drug names
+* Dosages
+* Frequency
+* Special instructions
 
 
-### 🎨 Elderly-Optimized UI
+### 📅 Smart Calendar
 
-* High-contrast design
-* Large touch targets
-* Minimal navigation layers
-* Color-coded status:
-
-  * 🟢 Green → Completed
-  * 🌸 Pink → Pending
+* Visual timeline of doses
+* Doctor appointment integration
+* Daily clarity view
 
 
-### ⏱️ ±1 Hour Safety Window Logic
 
-Medication logging is only enabled within one hour of the scheduled time.
+### 🔔 Intelligent Reminders
 
-Prevents:
-
-* Double logging
-* Early accidental dosing
-* Retroactive unsafe edits
+* Push notifications
+* Requires **“Confirm Intake”**
+* Prevents passive skipping
 
 
-### 🔢 Dynamic Multi-Dose Tracking
+### 🔉 Audio Assistance
 
-Automatically generates individual buttons for:
-
-* Once daily
-* Twice daily
-* Thrice daily medications
+* Reads labels aloud
+* Reduces pill anxiety
 
 
-### 📅 Smart Dashboard Filtering
+### 📊 Progress Tracking
 
-Only future appointments are shown.
-Past records are archived automatically.
+* Visual streak system
+* Historical logs
 
-Reduces cognitive clutter.
+
+### 🗺️ Pharmacy Locator
+
+* Integrated Google Maps API
+* Locate nearest open pharmacy
+* Emergency refill assistance
+
+---
+
+## 📁 Project Structure
+
+```
+lib/
+├── pages/
+│   ├── auth_page.dart
+│   ├── calendar_page.dart
+│   ├── home_page.dart
+│   ├── main_navigation_hub.dart
+│   ├── med_form_page.dart
+│   ├── profile_page.dart
+│   └── scanner_page.dart
+│
+├── services/
+│   ├── ai_service.dart
+│   ├── auth_service.dart
+│   ├── location_service.dart
+│   └── med_service.dart
+│
+├── auth_gate.dart
+├── firebase_options.dart
+└── main.dart
+```
 
 
 ## ⚙️ Setup Instructions
 
 ### 🔹 Prerequisites
 
-* Flutter 3.x
-* Dart SDK
-* Firebase project (Auth + Firestore enabled)
-* Gemini API key from Google AI Studio
+Ensure you have the following installed:
+
+* **Flutter SDK (3.x or later)**
+* **Dart SDK**
+* **Android Studio** (for Android development)
+* **Xcode** (for iOS development)
+* **Android Emulator or physical device**
+* **Google Gemini API Key**
 
 
 ### 🔹 .env Configuration
@@ -152,18 +174,8 @@ Reduces cognitive clutter.
 Create a `.env` file in the root directory:
 
 ```
-FIREBASE_API_KEY=your_firebase_api_key
 GEMINI_API_KEY=your_gemini_api_key
 ```
-
-
-### 🔹 Firebase Setup
-
-Enable:
-
-* Authentication (Email/Password)
-* Firestore Database
-
 
 ### 🔹 Installation
 
@@ -179,15 +191,17 @@ flutter run
 ### 🔁 High-Level Flow
 
 ```
-User → Capture Prescription Image
+User Device (Flutter App)
         ↓
-Flutter App
+Firebase Authentication
+        ↓
+Cloud Firestore (Schedules & Logs)
         ↓
 Gemini API (Text Extraction + Parsing)
         ↓
 Structured Medication Object
         ↓
-Firebase Firestore
+Firebase Analytics
         ↓
 Real-Time Dashboard Rendering
         ↓
@@ -204,11 +218,18 @@ Time-Window Logging System
 | AI Engine        | Google Gemini API             |
 | Authentication   | Firebase Auth                 |
 | Database         | Firebase Firestore            |
+| Analytics        | Firebase Analytics            |
 
 
-## 🔬 Google Technology Utilization (Cause → Effect)
+## 🔬 Google Technology Utilization
 
-### 1️⃣ Google Gemini API
+##  Flutter 
+
+* Cross-platform mobile development (iOS & Android)
+* Single codebase
+* Accessible UI customization
+
+### Google Gemini AI
 
 **Cause:**
 Prescription labels are unstructured and vary widely in format.
@@ -225,7 +246,7 @@ This enables:
 Without Gemini, users would need manual data entry — defeating the purpose of elderly accessibility.
 
 
-### 2️⃣ Firebase Authentication
+### Firebase Authentication
 
 **Cause:**
 Medical data requires identity-linked, secure access.
@@ -235,7 +256,7 @@ Firebase Auth provides secure sign-in with minimal friction.
 It ensures medication records are protected and user-specific.
 
 
-### 3️⃣ Firebase Firestore
+### Cloud Firestore
 
 **Cause:**
 Medication logs must update instantly and persist safely.
@@ -253,6 +274,19 @@ This ensures:
 * Reliable medication history
 * Instant UI updates
 * Caregiver visibility potential
+  
+
+### Firebase Analytics
+
+* Tracks adherence behavior
+* Monitors missed-dose patterns
+
+### Benefits
+
+* Serverless architecture
+* Automatic scaling
+* Built-in security rules
+* Real-time synchronization
 
 
 ## 💡 Innovation Highlights
@@ -292,25 +326,29 @@ Iterative font scaling, contrast optimization, simplified navigation depth.
 
 ## 📈 Future Improvements
 
-### 🧠 AI Enhancements
+### Phase 1: Accessibility Expansion
 
-* Medication interaction detection
-* Side-effect risk analysis
-* Predictive adherence scoring
+* Multilingual support
+* Voice-command logging
+* Caregiver-linked accounts
 
+### Phase 2: Health Integration
 
-### 👨‍⚕️ Caregiver Ecosystem
+* Wearable device sync
+* Drug interaction checker
+* Emergency alert system
 
-* Caregiver dashboard access
-* Remote monitoring
-* SMS emergency alerts
+### Phase 3: Smart Healthcare Ecosystem
 
+* Direct pharmacy refill requests
+* Physician dashboard access
+* Predictive adherence analytics
 
-### 🎙 Accessibility Expansion
-
-* Voice-command medication logging
-* Multilingual prescription recognition
-* Speech-to-text integration
+![Flutter](https://img.shields.io/badge/Flutter-3.x-blue?logo=flutter)
+![Firebase](https://img.shields.io/badge/Firebase-Auth%20%7C%20Firestore-orange?logo=firebase)
+![Google AI](https://img.shields.io/badge/Google-Gemini%20API-red?logo=google)
+![SDG 3](https://img.shields.io/badge/SDG-3%20Good%20Health%20and%20Well%20Being-green)
+![SDG 10](https://img.shields.io/badge/SDG-10%20Reduced%20Inequalities-pink)
 
 ---
 
