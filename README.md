@@ -273,7 +273,6 @@ This ensures:
 
 * Reliable medication history
 * Instant UI updates
-* Caregiver visibility potential
   
 
 ### Firebase Analytics
@@ -289,14 +288,64 @@ This ensures:
 * Real-time synchronization
 
 
-## 💡 Innovation Highlights
+## 💡 Implementation Details
+MediScan consists of five integrated modules, each designed to provide a safe, accessible, and intelligent medication management experience for seniors.
 
-* AI-driven zero-input onboarding
-* Safety window logic (prevents overdosing by design)
-* Cognitive-load reduction dashboard
-* Elderly-first UX philosophy
-* Minimalistic tech stack for scalability
+### AI Medication Scanning Module
+Users simply take a photo of their medication label using the in-app camera.
 
+* The system leverages multimodal AI to:
+* Extract medication name, dosage, and frequency
+* Interpret prescription instructions
+*Detect special warnings (e.g., “take after meals”)
+
+The AI validates extracted data using built-in safety logic before saving it to the schedule.
+This eliminates manual typing and significantly reduces human error during medication entry.
+
+### Smart Scheduling & Reminder Module
+Once medication details are captured, MediScan automatically generates a structured dosage schedule.
+
+Features include:
+* Visual daily and weekly medication calendar
+* Timed push notifications for each dose
+* “Confirm Intake” button to prevent accidental double logging
+* Missed dose detection with follow-up alerts
+
+The system ensures that no medication is logged twice within unsafe time intervals, adding an additional safety layer.
+
+### Safety & Double-Dose Prevention Module
+This module acts as MediScan’s protective layer.
+
+It:
+* Checks last logged intake time
+* Blocks duplicate confirmations within restricted intervals
+* Flags unusual medication patterns
+* Notifies users if a potential overdose risk is detected
+
+The system prioritizes prevention over correction, reducing medical risks before they occur.
+
+### Accessibility & Audio Assistance Module
+Designed specifically for the Golden Generation, this module focuses on usability and clarity.
+
+Features include:
+* High-contrast user interface
+* Large, easy-to-press buttons
+* Simplified navigation flow
+* Text-to-speech label reading
+* Verbal confirmation after each logged dose
+
+By minimizing visual strain and cognitive load, MediScan ensures technology remains inclusive and senior-friendly.
+
+### Pharmacy & Healthcare Support Module
+This module connects users with nearby healthcare resources.
+
+Capabilities:
+* Integrated map view to locate nearby pharmacies
+* Displays currently open pharmacies
+* Refill reminders based on remaining medication supply
+* Quick access to healthcare facilities
+
+This ensures users can act promptly when prescriptions run low.
 
 ## ⚔️ Challenges
 
@@ -350,6 +399,5 @@ Iterative font scaling, contrast optimization, simplified navigation depth.
 ![SDG 3](https://img.shields.io/badge/SDG-3%20Good%20Health%20and%20Well%20Being-green)
 ![SDG 10](https://img.shields.io/badge/SDG-10%20Reduced%20Inequalities-pink)
 
----
 
 ### 👥 Team CAPYbara © KitaHack 2026
