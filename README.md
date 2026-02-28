@@ -11,7 +11,7 @@ It transforms complex prescription labels into structured, easy-to-follow medica
 
 MediScan reduces medication errors, prevents double-dosing, and enables independent living through intelligent automation.
 
-
+---
 
 ## ⚠️ Problem Statement
 
@@ -38,8 +38,6 @@ MediScan addresses three major challenges faced by seniors:
 Studies show that up to **75–96% of seniors admit to medication mistakes at home**.
 
 These are systemic complexity failures — not user negligence.
-
-
 
 ## 🎯 Our Solution
 
@@ -84,6 +82,7 @@ This enables:
 
 AI is not decorative — it is the core engine of accessibility.
 
+---
 
 ## ✨ Key Features
 
@@ -130,84 +129,6 @@ AI is not decorative — it is the core engine of accessibility.
 
 ---
 
-## 📁 Project Structure
-
-```
-lib/
-├── pages/
-│   ├── auth_page.dart
-│   ├── calendar_page.dart
-│   ├── home_page.dart
-│   ├── main_navigation_hub.dart
-│   ├── med_form_page.dart
-│   ├── profile_page.dart
-│   └── scanner_page.dart
-│
-├── services/
-│   ├── ai_service.dart
-│   ├── auth_service.dart
-│   ├── location_service.dart
-│   └── med_service.dart
-│
-├── auth_gate.dart
-├── firebase_options.dart
-└── main.dart
-```
-
-
-## ⚙️ Setup Instructions
-
-### 🔹 Prerequisites
-
-Ensure you have the following installed:
-
-* **Flutter SDK (3.x or later)**
-* **Dart SDK**
-* **Android Studio** (for Android development)
-* **Xcode** (for iOS development)
-* **Android Emulator or physical device**
-* **Google Gemini API Key**
-
-
-### 🔹 .env Configuration
-
-Create a `.env` file in the root directory:
-
-```
-GEMINI_API_KEY=your_gemini_api_key
-```
-
-### 🔹 Installation
-
-```bash
-git clone https://github.com/Ying038/MediScan.git
-cd mediscan
-flutter pub get
-flutter run
-```
-
-## 🏗️ System Architecture
-
-### 🔁 High-Level Flow
-
-```
-User Device (Flutter App)
-        ↓
-Firebase Authentication
-        ↓
-Cloud Firestore (Schedules & Logs)
-        ↓
-Gemini API (Text Extraction + Parsing)
-        ↓
-Structured Medication Object
-        ↓
-Firebase Analytics
-        ↓
-Real-Time Dashboard Rendering
-        ↓
-Time-Window Logging System
-```
-
 ## 🛠 Technical Implementation
 
 ### 🔷 Tech Stack
@@ -223,7 +144,7 @@ Time-Window Logging System
 
 ## 🔬 Google Technology Utilization
 
-##  Flutter 
+###  Flutter 
 
 * Cross-platform mobile development (iOS & Android)
 * Single codebase
@@ -280,13 +201,35 @@ This ensures:
 * Tracks adherence behavior
 * Monitors missed-dose patterns
 
-### Benefits
+**Benefits**
 
 * Serverless architecture
 * Automatic scaling
 * Built-in security rules
 * Real-time synchronization
+---
 
+## 🏗️ System Architecture
+
+### 🔁 High-Level Flow
+
+```
+User Device (Flutter App)
+        ↓
+Firebase Authentication
+        ↓
+Cloud Firestore (Schedules & Logs)
+        ↓
+Gemini API (Text Extraction + Parsing)
+        ↓
+Structured Medication Object
+        ↓
+Firebase Analytics
+        ↓
+Real-Time Dashboard Rendering
+        ↓
+Time-Window Logging System
+```
 
 ## 💡 Implementation Details
 MediScan consists of five integrated modules, each designed to provide a safe, accessible, and intelligent medication management experience for seniors.
@@ -347,51 +290,164 @@ Capabilities:
 
 This ensures users can act promptly when prescriptions run low.
 
+---
+
 ## ⚔️ Challenges
 
-### 1️⃣ Parsing Ambiguous Instructions
+### Real-Time Data Synchronization & Race Condition
 
-Prescription formats vary dramatically.
+**The Problem**
 
-**Solution:**
-We implemented structured output prompting with Gemini to enforce consistent JSON responses.
+During development, we encountered a critical race condition issue.
 
+When a user scanned a medication bottle, the AI successfully extracted the details and returned the result instantly. However, after navigating back to the Main Dashboard, the newly scanned medication would not appear immediately.
 
-### 2️⃣ Preventing Double Logging
+This created a confusing “blank state” where:
 
-Users could attempt multiple confirmations.
+* The scan appeared successful
+* But the medication list did not update
+* Users assumed the scan had failed
 
-**Solution:**
-Timestamp validation + one-hour activation window logic.
+The root cause was that the Flutter UI navigated away from the scanning screen **before the Firebase Firestore write operation had completed** in the background.
 
-
-### 3️⃣ UI Accessibility Testing
-
-Standard mobile UI patterns are unsuitable for elderly users.
-
-**Solution:**
-Iterative font scaling, contrast optimization, simplified navigation depth.
+The Gemini API was responding faster than Firestore could synchronize the data to the cloud.
 
 
-## 📈 Future Improvements
+**The Debugging Process**
 
-### Phase 1: Accessibility Expansion
+Using Dart DevTools in VS Code, we traced the asynchronous data flow and discovered:
+
+* Navigation was triggered after the Gemini API response
+* Firestore writes were still pending
+* The UI refresh logic was not listening reactively to database updates
+
+The issue was not with AI accuracy — it was timing and state management.
+
+
+**The Solution**
+
+We implemented two key improvements:
+
+1️⃣ Enforced Async Sequencing
+
+* Added a “Processing” overlay after scanning
+* Awaited the Firestore write `Future` before allowing navigation
+* Ensured database confirmation before returning to the dashboard
+
+This prevented premature screen transitions.
+
+2️⃣ Reactive UI with StreamBuilder
+
+* Refactored the dashboard to use `StreamBuilder`
+* Subscribed directly to Firestore collection snapshots
+* Enabled real-time UI updates the instant data reached the cloud
+
+Now, the medication entry appears automatically without manual refresh.
+
+**The Result**
+
+* Eliminated user confusion
+* Achieved full data consistency
+* Ensured seamless real-time synchronization
+* Improved perceived performance and reliability
+
+Now, every successfully scanned medication is guaranteed to appear instantly on the home screen — creating a smooth and trustworthy user experience.
+
+---
+## 📈 Future Roadmap
+
+MediScan’s roadmap transitions from a standalone medication tracker into a collaborative, intelligent healthcare ecosystem.
+
+
+### Phase 1: Strengthening User Confidence (Short-Term)
+
+**👨‍👩‍👧 Caregiver Sync Feature**
+
+* Real-time medication log sharing with trusted caregivers
+* Remote monitoring of adherence
+* Alerts for missed or double doses
+
+This ensures family members can provide support while maintaining user independence.
+
+
+### Phase 2: Global Expansion & Compliance
+
+**🌍 Regional Localization**
 
 * Multilingual support
-* Voice-command logging
-* Caregiver-linked accounts
+* Region-specific medication formats
+* Cultural UX adjustments for accessibility
 
-### Phase 2: Health Integration
+**🔐 Data Privacy & Regulatory Compliance**
 
-* Wearable device sync
-* Drug interaction checker
-* Emergency alert system
+As MediScan scales globally, we will prioritize:
 
-### Phase 3: Smart Healthcare Ecosystem
+* HIPAA compliance (United States)
+* GDPR compliance (Europe)
+* Regional health data protection regulations
 
-* Direct pharmacy refill requests
-* Physician dashboard access
-* Predictive adherence analytics
+This ensures secure handling of sensitive medical data worldwide.
+
+
+### Phase 3: Integrated Health Ecosystem
+
+**🏥 Electronic Health Record (EHR) Integration**
+
+* Sync medication data directly with hospital systems
+* Share adherence reports with doctors
+* Reduce prescription miscommunication
+
+**⌚ Wearable Device Integration**
+
+* Sync with smartwatches and health trackers
+* Monitor heart rate and activity levels
+* Correlate physiological signals with medication timing
+
+
+## 🚀 Long-Term Vision: Proactive Health Assistant
+
+Our ultimate goal is to transform MediScan into a proactive AI health assistant that:
+
+* Predicts refill needs before medication runs out
+* Detects adherence risk patterns
+* Suggests schedule adjustments
+* Facilitates better communication between patients, caregivers, and doctors
+
+MediScan will not only record medication activity —
+it will intelligently anticipate needs and improve healthcare coordination across the entire support network.
+
+---
+## ⚙️ Setup Instructions
+
+### 🔹 Prerequisites
+
+Ensure you have the following installed:
+
+* **Flutter SDK (3.x or later)**
+* **Dart SDK**
+* **Android Studio** (for Android development)
+* **Xcode** (for iOS development)
+* **Android Emulator or physical device**
+* **Google Gemini API Key**
+
+
+### 🔹 .env Configuration
+
+Create a `.env` file in the root directory:
+
+```
+GEMINI_API_KEY=your_gemini_api_key
+```
+
+### 🔹 Installation
+
+```bash
+git clone https://github.com/Ying038/MediScan.git
+cd mediscan
+flutter pub get
+flutter run
+```
+---
 
 ![Flutter](https://img.shields.io/badge/Flutter-3.x-blue?logo=flutter)
 ![Firebase](https://img.shields.io/badge/Firebase-Auth%20%7C%20Firestore-orange?logo=firebase)
